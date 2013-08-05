@@ -66,6 +66,8 @@ else
 
   requires 'dpkg -s build-essential' 'build-essential'
   requires 'dpkg -s libaio-dev' 'libaio-dev'
+  requires 'dpkg -s python-lxml' 'python-lxm'
+  requires 'dpkg -s python-argparse' 'python-argparse'
   requires 'perl -MTime::HiRes -e 1' 'perl'
 fi
 
@@ -98,6 +100,7 @@ IOPING_VERSION=0.6
 IOPING_DIR=ioping-$IOPING_VERSION
 FIO_VERSION=2.0.9
 FIO_DIR=fio-$FIO_VERSION
+TESPEED_DIR=tespeed-master
 UPLOAD_ENDPOINT='http://promozor.com/uploads.text'
 
 # args: [name] [target dir] [filename] [url]
@@ -111,6 +114,8 @@ function require_download() {
 require_download FIO fio-$FIO_DIR https://github.com/Crowd9/Benchmark/raw/master/fio-$FIO_VERSION.tar.gz
 require_download IOPing $IOPING_DIR https://ioping.googlecode.com/files/ioping-$IOPING_VERSION.tar.gz
 require_download UnixBench $UNIX_BENCH_DIR https://github.com/Crowd9/Benchmark/raw/master/UnixBench$UNIX_BENCH_VERSION-patched.tgz
+require_download TeSpeed $TESPEED_DIR https://github.com/Janhouse/tespeed/archive/master.tar.gz
+
 mv -f UnixBench $UNIX_BENCH_DIR 2>/dev/null
 
 cat > $FIO_DIR/reads.ini << EOF
@@ -241,6 +246,11 @@ download_benchmark 'Softlayer, Singapore' 'http://speedtest.sng01.softlayer.com/
 download_benchmark 'Softlayer, Seattle, WA, USA' 'http://speedtest.sea01.softlayer.com/downloads/test100.zip'
 download_benchmark 'Softlayer, San Jose, CA, USA' 'http://speedtest.sjc01.softlayer.com/downloads/test100.zip'
 download_benchmark 'Softlayer, Washington, DC, USA' 'http://speedtest.wdc01.softlayer.com/downloads/test100.zip'
+
+cd $TESPEED_DIR
+sed -i ./tespeed.py -e 's,^#!/usr/bin/env python2,#!/usr/bin/env python,'
+./tespeed.py 2>&1 | tee -a ../sb-output.log
+cd ..
 
 echo "Running traceroute..."
 echo "Traceroute (cachefly.cachefly.net): \`traceroute cachefly.cachefly.net 2>&1\`" >> sb-output.log
