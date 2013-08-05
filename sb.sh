@@ -66,7 +66,7 @@ else
 
   requires 'dpkg -s build-essential' 'build-essential'
   requires 'dpkg -s libaio-dev' 'libaio-dev'
-  requires 'dpkg -s python-lxml' 'python-lxm'
+  requires 'dpkg -s python-lxml' 'python-lxml'
   requires 'dpkg -s python-argparse' 'python-argparse'
   requires 'perl -MTime::HiRes -e 1' 'perl'
 fi
