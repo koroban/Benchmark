@@ -260,11 +260,13 @@ function speedtest_benchmark() {
         sponsor=\$(echo "\$data" | sed -e 's,.*sponsor="\(.*\)",\1,' -e 's,".*$,,')
         echo "Benchmarking upload to \$sponsor, \$1, \$2 (\$url)"
 
-        RESULT=\$(./tespeed.py -w "\$url")
-        DOWNLOAD_SPEED=\$(echo "\$RESULT\" | cut -d',' -f2)
+        RESULT=\$(./tespeed.py -mib -w "\$url")
+
+        DOWNLOAD_SPEED=\$(echo "\$RESULT\" | cut -d',' -f1)
         UPLOAD_SPEED=\$(echo "\$RESULT\" | cut -d',' -f2)
-        echo "Download \$sponsor, \$1, \$2: \$DOWNLOAD_SPEED" >> sb-output.log 2>&1
-        echo "Upload \$sponsor, \$1, \$2: \$UPLOAD_SPEED" >> sb-output.log 2>&1
+        UNITY=\$(echo "\$RESULT\" | cut -d',' -f3 | sed -e's,i,,g')
+        echo "Download \$sponsor, \$1, \$2: \${DOWNLOAD_SPEED}\${UNITY}/s" >> sb-output.log 2>&1
+        echo "Upload \$sponsor, \$1, \$2: \${UPLOAD_SPEED}\${UNITY}/s" >> sb-output.log 2>&1
     else
         echo "No Sponsor for \$1, \$2 found!"
     fi
