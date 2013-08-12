@@ -272,11 +272,11 @@ function speedtest_benchmark() {
     fi
 }
 
+cd $TESPEED_DIR
 echo "Downloading speedtest.net Serverlist"
 t=\$(date +%s)
 wget -q -O server_list.txt "http://www.speedtest.net/speedtest-servers.php?x=\$t"
 if [[ "\$?" == "0" ]]; then
-    cd \$TESPEED_DIR
     sed -i ./tespeed.py -e 's,^#!/usr/bin/env python2,#!/usr/bin/env python,'
     speedtest_benchmark 'Atlanta, GA' 'United States'
     speedtest_benchmark 'Dallas, TX' 'United States'
@@ -293,11 +293,11 @@ if [[ "\$?" == "0" ]]; then
     speedtest_benchmark 'Seattle, WA' 'United States'
     speedtest_benchmark 'San Jose, CA' 'United States'
     speedtest_benchmark 'Washington, DC' 'United States'
-    cd ..
 else
     echo "Serverlist download failed!"
 fi
 rm -f server_list.txt
+cd ..
 
 echo "Running traceroute..."
 echo "Traceroute (cachefly.cachefly.net): \`traceroute cachefly.cachefly.net 2>&1\`" >> sb-output.log
