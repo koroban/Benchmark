@@ -262,9 +262,9 @@ function speedtest_benchmark() {
 
         RESULT=\$(./tespeed.py -mib -w "\$url")
 
-        DOWNLOAD_SPEED=\$(echo "\$RESULT\" | cut -d',' -f1)
-        UPLOAD_SPEED=\$(echo "\$RESULT\" | cut -d',' -f2)
-        UNITY=\$(echo "\$RESULT\" | cut -d',' -f3 | sed -e's,i,,g')
+        DOWNLOAD_SPEED=\$(echo "\$RESULT" | cut -d',' -f1)
+        UPLOAD_SPEED=\$(echo "\$RESULT" | cut -d',' -f2)
+        UNITY=\$(echo "\$RESULT" | cut -d',' -f3 | sed -e's,i,,g')
         echo "Download \$sponsor, \$1, \$2: \${DOWNLOAD_SPEED}\${UNITY}/s" >> sb-output.log 2>&1
         echo "Upload \$sponsor, \$1, \$2: \${UPLOAD_SPEED}\${UNITY}/s" >> sb-output.log 2>&1
     else
