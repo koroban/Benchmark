@@ -44,10 +44,10 @@ echo "Checking for required dependencies"
 function requires() {
   if [ `$1 >/dev/null; echo $?` -ne 0 ]; then
     TO_INSTALL="$TO_INSTALL $2"
-  fi 
+  fi
 }
-function requires_command() { 
-  requires "which $1" $1 
+function requires_command() {
+  requires "which $1" $1
 }
 
 TO_INSTALL=""
@@ -87,7 +87,7 @@ if [ "$TO_INSTALL" != '' ]; then
   if [ "$UPDATE" != '' ]; then
     echo "Doing package update"
     $SUDO $UPDATE
-  fi 
+  fi
   $SUDO $PACKAGE_MANAGER install -y $TO_INSTALL $MANAGER_OPTS
 fi
 
@@ -178,9 +178,9 @@ echo "Distro:
 \`cat /etc/issue 2>&1\`
 CPU Info:
 \`cat /proc/cpuinfo 2>&1\`
-Disk space: 
+Disk space:
 \`df --total 2>&1\`
-Free: 
+Free:
 \`free 2>&1\`" >> sb-output.log
 
 echo "Running dd I/O benchmark..."
