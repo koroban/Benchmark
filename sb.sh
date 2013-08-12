@@ -58,6 +58,8 @@ if [ `which apt-get >/dev/null 2>&1; echo $?` -ne 0 ]; then
   requires 'yum list installed kernel-devel' 'kernel-devel'
   requires 'yum list installed libaio-devel' 'libaio-devel'
   requires 'yum list installed gcc-c++' 'gcc-c++'
+  requires 'yum list installed python-lxml' 'python-lxml'
+  requires 'yum list installed python-argparse' 'python-argparse'
   requires 'perl -MTime::HiRes -e 1' 'perl-Time-HiRes'
 else
   PACKAGE_MANAGER='apt-get'
@@ -66,6 +68,8 @@ else
 
   requires 'dpkg -s build-essential' 'build-essential'
   requires 'dpkg -s libaio-dev' 'libaio-dev'
+  requires 'dpkg -s python-lxml' 'python-lxml'
+  requires 'dpkg -s python-argparse' 'python-argparse'
   requires 'perl -MTime::HiRes -e 1' 'perl'
 fi
 
@@ -112,6 +116,7 @@ function require_download() {
 require_download FIO fio-$FIO_DIR https://github.com/Crowd9/Benchmark/raw/master/fio-$FIO_VERSION.tar.gz
 require_download IOPing $IOPING_DIR https://ioping.googlecode.com/files/ioping-$IOPING_VERSION.tar.gz
 require_download UnixBench $UNIX_BENCH_DIR https://github.com/Crowd9/Benchmark/raw/master/UnixBench$UNIX_BENCH_VERSION-patched.tgz
+require_download TeSpeed $TESPEED_DIR https://github.com/Janhouse/tespeed/archive/master.tar.gz
 
 mv -f UnixBench $UNIX_BENCH_DIR 2>/dev/null
 
@@ -244,59 +249,53 @@ download_benchmark 'Softlayer, Seattle, WA, USA' 'http://speedtest.sea01.softlay
 download_benchmark 'Softlayer, San Jose, CA, USA' 'http://speedtest.sjc01.softlayer.com/downloads/test100.zip'
 download_benchmark 'Softlayer, Washington, DC, USA' 'http://speedtest.wdc01.softlayer.com/downloads/test100.zip'
 
-function upload_benchmark() {
+function speedtest_benchmark() {
     if [[ "\$1" != "" ]]; then
-        data=\$(grep 'name="\$1" country="\$2"' server_list.txt | head -n1)
+        data=\$(grep "name=\\"\$1\\" country=\\"\$2\\"" server_list.txt | head -n1)
     else
-        data=\$(grep 'country="\$2"' server_list.txt | head -n1)
+        data=\$(grep "country=\\"\$2\\"" server_list.txt | head -n1)
     fi
     if [[ "\$data" != "" ]]; then
-        url=\$(echo "\$data" | sed -e 's,.*url="\(.*\)",\1,' -e 's,".*$,,')
+        url=\$(echo "\$data" | sed -e 's,.*url="\(.*\)",\1,' -e 's,".*$,,' -e 's,upload.php,,')
         sponsor=\$(echo "\$data" | sed -e 's,.*sponsor="\(.*\)",\1,' -e 's,".*$,,')
         echo "Benchmarking upload to \$sponsor, \$1, \$2 (\$url)"
 
-        for size in 256 512 1024 2048; do
-            UPLOAD_SPEED=\`wget --post-file=tesz_upload_\$size.bin -O /dev/null \$2 2>&1 | awk '/\\/dev\\/null/ {speed=\$3 \$4} END {gsub(/\\(|\\)/,"",speed); print speed}'\`
-            echo "Got \$UPLOAD_SPEED"
-            echo "Upload \$sponsor, \$1, \$2: \$UPLOAD_SPEED" >> sb-output.log 2>&1
-        done
+        RESULT=\$(./tespeed.py -w "\$url")
+        DOWNLOAD_SPEED=\$(echo "\$RESULT\" | cut -d',' -f2)
+        UPLOAD_SPEED=\$(echo "\$RESULT\" | cut -d',' -f2)
+        echo "Download \$sponsor, \$1, \$2: \$DOWNLOAD_SPEED" >> sb-output.log 2>&1
+        echo "Upload \$sponsor, \$1, \$2: \$UPLOAD_SPEED" >> sb-output.log 2>&1
     else
         echo "No Sponsor for \$1, \$2 found!"
     fi
 }
 
 echo "Downloading speedtest.net Serverlist"
-wget -q -O server_list.txt "http://www.speedtest.net/speedtest-servers.php?x=\$t" && ok=1
-
-if [[ "$ok" == "1" ]]; then
-    for size in 256 512 1024 2048; do
-        echo "Creating test upload file test_upload_\$size.bin"
-        dd if=/dev/zero of=test_upload_\$size.bin count=\$size bs=1024
-    done
-    upload_benchmark 'Atlanta, GA' 'United States'
-    upload_benchmark 'Dallas, TX' 'United States'
-    upload_benchmark '' 'JP'
-    upload_benchmark 'London' 'Great Britain'
-    upload_benchmark 'Paris' 'France'
-    upload_benchmark 'Rotterdam' 'Netherlands'
-    upload_benchmark 'Berlin' 'Germany'
-    upload_benchmark 'Perth, WA' 'Australia'
-    upload_benchmark 'Sydney' 'Australia'
-    upload_benchmark 'Haarlem' 'Netherlands'
-    upload_benchmark 'Manassas, VA' 'United States'
-    upload_benchmark 'Singapore' 'Republic of Singapore'
-    upload_benchmark 'Seattle, WA' 'United States'
-    upload_benchmark 'San Jose, CA' 'United States'
-    upload_benchmark 'Washington, DC' 'United States'
-
-    for size in 256 512 1024 2048; do
-        rm test_upload_\$size.bin
-    done
-    rm server_list.txt
+t=\$(date +%s)
+wget -q -O server_list.txt "http://www.speedtest.net/speedtest-servers.php?x=\$t"
+if [[ "\$?" == "0" ]]; then
+    cd \$TESPEED_DIR
+    sed -i ./tespeed.py -e 's,^#!/usr/bin/env python2,#!/usr/bin/env python,'
+    speedtest_benchmark 'Atlanta, GA' 'United States'
+    speedtest_benchmark 'Dallas, TX' 'United States'
+    speedtest_benchmark '' 'Japan'
+    speedtest_benchmark 'London' 'Great Britain'
+    speedtest_benchmark 'Paris' 'France'
+    speedtest_benchmark 'Rotterdam' 'Netherlands'
+    speedtest_benchmark 'Berlin' 'Germany'
+    speedtest_benchmark 'Perth, WA' 'Australia'
+    speedtest_benchmark 'Sydney' 'Australia'
+    speedtest_benchmark 'Haarlem' 'Netherlands'
+    speedtest_benchmark 'Manassas, VA' 'United States'
+    speedtest_benchmark 'Singapore' 'Republic of Singapore'
+    speedtest_benchmark 'Seattle, WA' 'United States'
+    speedtest_benchmark 'San Jose, CA' 'United States'
+    speedtest_benchmark 'Washington, DC' 'United States'
+    cd ..
 else
     echo "Serverlist download failed!"
 fi
-rm -f servers.txt
+rm -f server_list.txt
 
 echo "Running traceroute..."
 echo "Traceroute (cachefly.cachefly.net): \`traceroute cachefly.cachefly.net 2>&1\`" >> sb-output.log
